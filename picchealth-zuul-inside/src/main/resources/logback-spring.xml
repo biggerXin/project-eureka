@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Logback configuration. See http://logback.qos.ch/manual/index.html -->
+<configuration scan="true" scanPeriod="10 seconds">
+	<!--<include resource="org/springframework/boot/logging/logback/base.xml" /> -->
+	<springProperty scope="context" name="springAppName" source="spring.application.name"/>
+	<springProperty scope="context" name="logPath" source="logging.path"/>
+	<!--定义日志文件的存储地址和前缀名-->
+	<property name="LOG_HOME" value="${logPath:-logs}/${springAppName}"/>
+	<property name="LOG_PREFIX" value="${springAppName}"/>
+	<!--获取应用IP -->
+	<!--<conversionRule conversionWord="ip" converterClass="ins.framework.aop.log.util.LogIP" />-->
+	<!-- 彩色日志 -->
+	<!-- 彩色日志依赖的渲染类 -->
+	<conversionRule conversionWord="clr" converterClass="org.springframework.boot.logging.logback.ColorConverter" />
+	<conversionRule conversionWord="wex" converterClass="org.springframework.boot.logging.logback.WhitespaceThrowableProxyConverter" />
+	<conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
+
+	<!--输出到控制台-->
+	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+		<encoder>
+<!--
+			<Pattern>%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread] %clr(%-5level){magenta} %logger{50} - %msg%n%wEx</Pattern>
+-->
+			<Pattern>[%thread] %clr(%-5level){magenta} %logger{50} - %msg%n%wEx</Pattern>
+		</encoder>
+	</appender>
+	
+	<!-- 一般信息按照每天生成日志文件 -->
+	<appender name="FILE_LOG"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<File>${LOG_HOME}/${LOG_PREFIX}-info.log</File>
+		<rollingPolicy
+			class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<!-- 每天一归档 -->
+			<fileNamePattern>${LOG_HOME}/${LOG_PREFIX}-info-%d{yyyyMMdd}.log.%i
+			</fileNamePattern>
+			<!-- 单个日志文件最多50MB, 30天的日志周期，最大不能超过500MB -->
+			<maxFileSize>50MB</maxFileSize>
+			<maxHistory>30</maxHistory>
+			<totalSizeCap>500MB</totalSizeCap>
+		</rollingPolicy>
+		<encoder>
+			<!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符 -->
+			<Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36}
+				-%msg%n</Pattern>
+		</encoder>
+	</appender>
+
+	<!-- aop日志 -->
+	<appender name="AOPLOG"
+		class="ch.qos.logback.core.rolling.RollingFileAppender"> 
+		<File>${LOG_HOME}/${LOG_PREFIX}-aoplog.log</File>
+		<rollingPolicy
+			class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<!-- 每天一归档 -->
+			<fileNamePattern>${LOG_HOME}/${LOG_PREFIX}-aoplog-%d{yyyyMMdd}.log.%i
+			</fileNamePattern>
+			<!-- 单个日志文件最多50MB, 30天的日志周期，最大不能超过500MB -->
+			<maxFileSize>50MB</maxFileSize>
+			<maxHistory>30</maxHistory>
+			<totalSizeCap>500MB</totalSizeCap>
+		</rollingPolicy>
+		<encoder>
+			<!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符 -->
+			<Pattern>[%date] [%thread] [%level] %msg%n</Pattern>
+		</encoder> 
+	</appender>
+	<appender name="TRACELOG"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<File>${LOG_HOME}/${LOG_PREFIX}-tracelog.log</File>
+		<rollingPolicy
+			class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+			<!-- 每天一归档 -->
+			<fileNamePattern>${LOG_HOME}/${LOG_PREFIX}-tracelog-%d{yyyyMMdd}.log.%i
+			</fileNamePattern>
+			<!-- 单个日志文件最多50MB, 30天的日志周期，最大不能超过500MB -->
+			<maxFileSize>50MB</maxFileSize>
+			<maxHistory>30</maxHistory>
+			<totalSizeCap>500MB</totalSizeCap>
+		</rollingPolicy>
+		<encoder>
+			<!--格式化输出：%d表示日期，%thread表示线程名，%-5level：级别从左显示5个字符宽度%msg：日志消息，%n是换行符 -->
+			<Pattern>[%date] [%thread] [%level] %msg%n</Pattern>
+		</encoder> 
+	</appender>
+
+	<logger name="AOPLOG" level="INFO" additivity="false">
+		<appender-ref ref="AOPLOG" /> 
+	</logger>
+ 
+	<logger name="TRACELOG" level="INFO" additivity="false">
+		<appender-ref ref="TRACELOG" />  
+	</logger> 
+
+	<springProfile name="dev">
+		<root level="INFO">
+			<appender-ref ref="STDOUT" />
+		</root>
+	</springProfile>
+	
+	<springProfile name="!dev"> 
+		<logger name="ins" level="INFO" additivity="false">
+			<appender-ref ref="FILE_LOG" />
+			<appender-ref ref="STDOUT" />
+		</logger>
+		<!-- 日志输出级别 -->
+		<root level="INFO">
+			<appender-ref ref="FILE_LOG" />
+			<appender-ref ref="STDOUT" />
+		</root>
+	</springProfile>
+	<jmxConfigurator />
+</configuration>
